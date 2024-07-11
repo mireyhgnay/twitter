@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { FirebaseError } from 'firebase/app';
 
 import { styled } from "styled-components";
 import { auth } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Wrapper = styled.div`
   height: 100%;
@@ -41,8 +42,16 @@ const Input = styled.input`
 `;
 
 const Error = styled.span`
+  margin-top: 10px;
   font-weight: 600;
   color: tomato;
+`;
+
+export const Switcher = styled.span`
+  margin-top: 20px;
+  a {
+    color: #1d9bf0;
+  }
 `;
 
 export default function CreateAccount() {
@@ -68,21 +77,25 @@ export default function CreateAccount() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    setError("");
+    
     if (isLoading || name === "" || email === "" || password === "") return;
+
     try {
       // 1. loading...
       setIsLoading(true)
       // 2. email, password 사용해서 계정 생성 
       const credentials = await createUserWithEmailAndPassword(auth, email, password);
-      console.log(credentials.user);
       // 3. 사용자 이름 저장
       await updateProfile(credentials.user, {
         displayName: name,
       })
       // 4. 메인홈페이지로 리다이렉트
       navigate("/")
-    } catch (error) {
-      setError(`${error}`)
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        setError(e.message)
+      }
     } finally {
       setIsLoading(false);
     }
@@ -122,6 +135,9 @@ export default function CreateAccount() {
         />
       </Form>
       {error !== "" ? <Error>{error}</Error> : null}
+      <Switcher>
+        이미 계정이 있으신가요? <Link to="/login">Login &rarr;</Link>
+      </Switcher>
     </Wrapper>
   )
 }

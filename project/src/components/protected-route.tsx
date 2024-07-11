@@ -5,11 +5,15 @@
 import { Navigate } from 'react-router-dom';
 import { auth } from '../firebase';
 
-export default function ProtectedRoute({ children } : {children: React.ReactNode}) {
+export default function ProtectedRoute({ 
+  children 
+}: {
+  children: React.ReactNode
+}) {
   const user = auth.currentUser;
   // 사용자 정보에 없다면 login페이지로 리다이렉트
   if(user === null) {
-    return <Navigate to={"/login"} />
+    return<Navigate to="/login" />;
   }
 
   // <Home /> or <Profile />
