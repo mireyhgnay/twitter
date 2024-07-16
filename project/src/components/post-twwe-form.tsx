@@ -1,5 +1,7 @@
+import { addDoc, collection } from "firebase/firestore";
 import { useState } from "react";
 import { styled } from "styled-components";
+import { auth, db } from "../firebase";
 
 const Form = styled.form`
   display: flex;
@@ -74,8 +76,35 @@ export default function PostTwweForm() {
     }
   }
 
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const user = auth.currentUser;
+    if(isLoading || !user || tweet === "" || tweet.length > 180) return;
+
+    const offset = 1000 * 60 * 60 * 9;
+    const koreaNow = new Date((new Date()).getTime() + offset);
+    const createDate = koreaNow.toISOString().replace("T", " ").split('.')[0];
+
+    try {
+      setIsLoading(true); 
+      await addDoc(collection(db, "tweet"), { // firebaseDB - tweet컬렉션
+        // 자바스크립트 코드로 추가하고 싶은 문서 추가
+        tweet,
+        createDate,
+        username: user.displayName || "Anonymous", // 익명이 경우에는 Anonymous
+        userId: user.uid,
+      })
+      setTweet("");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
-    <Form>
+    <Form onSubmit={onSubmit}>
       <TextArea
         rows={5}
         maxLength={180}
